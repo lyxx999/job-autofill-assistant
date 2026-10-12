@@ -1723,7 +1723,7 @@
       const workEnd = parseYearMonth(work.endDate);
 
       // 获取当前教育数据
-      const edu = eduList[currentEduIdx] || {};
+      let edu = eduList[currentEduIdx] || {};
       const eduStart = parseYearMonth(edu.startDate);
       const eduEnd = parseYearMonth(edu.endDate);
       const family = familyList[currentFamilyIdx] || {};
@@ -1731,9 +1731,32 @@
       const paper = paperList[currentPaperIdx] || paperList[0] || {};
       const patent = patentList[currentPatentIdx] || patentList[0] || {};
 
-      // 教育索引错位检测：页面上已有的学历值与 profile 当前教育条目不匹配时，
-      // 说明用户手动选择了不同学历（如选了"本科"但 profile[0] 是"硕士"），
-      // 此时跳过教育相关字段的自动填充，避免填入错误数据。
+      // 教育条目自动对齐：根据页面上已选的学历值，找到 profile 中匹配的教育条目。
+      // 解决"选了本科但 profile[0] 是高中/硕士"导致填错的问题。
+      const isEduField = ['school', 'major', 'degree', 'degreeType', 'schoolType', 'academicDegree',
+        'secondMajor', 'college', 'gpa', 'rank', 'courses', 'educationDescription',
+        'eduStartDate', 'eduEndDate', 'degreeCertNo', 'diplomaCertNo'].includes(fieldType);
+      if (isEduField && eduList.length > 1) {
+        const degreeField = fields.find(f => matchFieldType(f) === 'degree' &&
+          !f.closest('#job-autofill-dock, #job-autofill-copy-panel, #job-autofill-ai-panel, #job-autofill-log-panel'));
+        if (degreeField) {
+          const pageVal = String(readFieldValue(degreeField) || '').trim();
+          if (pageVal) {
+            const norm = (s) => String(s).replace(/硕士|博士/g, '研究生').trim();
+            const pageNorm = norm(pageVal);
+            // 当前索引的条目不匹配时，搜索其他条目
+            if (norm(edu.degree) !== pageNorm) {
+              const matched = eduList.find(e => norm(e.degree) === pageNorm);
+              if (matched) {
+                edu = matched;
+                currentEduIdx = eduList.indexOf(matched);
+              }
+            }
+          }
+        }
+      }
+
+      // 教育索引错位检测：自动对齐后仍不匹配时，跳过填充
       const eduMismatch = (fieldType === 'school' || fieldType === 'major' || fieldType === 'educationDescription') &&
         edu.degree && (() => {
           const degreeField = fields.find(f => matchFieldType(f) === 'degree' &&
@@ -1741,7 +1764,7 @@
           if (!degreeField) return false;
           const pageVal = readFieldValue(degreeField);
           if (!pageVal) return false;
-          const norm = (s) => String(s).replace(/硕士|博士|本科|大专|专科/g, (m) => ({ '硕士': '研究生', '博士': '研究生' }[m] || m)).trim();
+          const norm = (s) => String(s).replace(/硕士|博士/g, '研究生').trim();
           return norm(pageVal) !== norm(edu.degree);
         })();
       if (eduMismatch) {
