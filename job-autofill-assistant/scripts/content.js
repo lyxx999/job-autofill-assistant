@@ -574,8 +574,8 @@
       /资格证书|职业证书|所获证书|certificate/i
     ],
     certificateCode: [
-      /^(certificate.*(?:code|number|no)|证书编号|资格证编号)$/i,
-      /证书.*编号|certificate.*(?:code|number)/i
+      /^(certificate.*(?:code|number|no)|证书编号|资格证编号|职业资格证编号)$/i,
+      /资格证.*编号|职业资格证|certificate.*(?:code|number)/i
     ],
     certificateIssuer: [
       /^(certificate.*issuer|issuing.*organization|颁发机构|发证机构)$/i,
