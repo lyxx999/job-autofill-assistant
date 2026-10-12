@@ -1264,7 +1264,7 @@
     // 标签提取失败时的 id/name 关键词兜底
     const idNameHint = hintKey(`${features.name || ''} ${features.id || ''}`);
     if (idNameHint) {
-      for (const [fieldType, keys] of Object.entries(FIELD_ALIASES)) {
+      for (const [fieldType, keys] of FIELD_ALIASES) {
         for (const key of keys) {
           const k = hintKey(key);
           if (k.length >= 4 && idNameHint.includes(k)) return fieldType;
