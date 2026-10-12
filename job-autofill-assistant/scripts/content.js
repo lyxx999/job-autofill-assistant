@@ -213,6 +213,9 @@
         await sleep(60);
         return selectedMatches();
       }
+      // 下拉选项中没有精确匹配（远程搜索/动态加载未返回）→ 保留搜索文本作为值
+      // 很多网申表单的学校/专业是"搜索即输入"，文本保留即有效
+      if (readFieldValue(search) === valStr) return true;
       nativeSet(search, HTMLInputElement.prototype, '');
       dispatchInputEvents(search, '');
     }
