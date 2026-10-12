@@ -1759,7 +1759,8 @@
               const idxMatch = pageVal.match(/_(\d+)$/);
               if (idxMatch) {
                 const idx = parseInt(idxMatch[1], 10);
-                const commonDegrees = ['高中', '中专', '大专', '本科', '硕士', '博士'];
+                // 常见学历下拉选项顺序（从高到低，如国聘网）
+                const commonDegrees = ['博士', '硕士', '本科', '专科', '高中', '中专', '初中'];
                 if (idx < commonDegrees.length) pageVal = commonDegrees[idx];
               }
             }
@@ -3293,19 +3294,30 @@
     const isInternalId = /_list_\d+$/.test(val) || /^[a-z]+_list_\d+$/.test(val);
     if (val && !isInternalId) return val;
     // 自定义下拉框：从容器内读取选中项的显示文本
-    if (isSelectWidget(el)) {
-      const wrap = el.closest('.ant-select, .el-select, .rc-select, .semi-select, .arco-select, .phoenix-select, [class*="sd-Select-container-"], [class*="select"], [class*="dropdown"]') || el.parentElement;
-      if (wrap) {
-        // 优先找选中项的显示文本（排除 input 和内部 id 类元素）
-        const candidates = [...wrap.querySelectorAll('[class*="selection-item"], [class*="selected"], [class*="value"], [class*="text"], [class*="label"], [class*="tip"], [class*="item"]')]
-          .filter(n => !n.matches('input, textarea, select, svg, i, .ant-select-arrow, .ant-select-suffix'));
-        for (const node of candidates) {
-          const text = (node.textContent || '').trim();
-          if (text && text.length >= 2 && text.length <= 30 && !/_list_\d+/.test(text)) return text;
+    if (isSelectWidget(el) || isInternalId) {
+      // 逐层向上查找容器（最多 6 层）
+      let wrap = el;
+      for (let i = 0; i < 6 && wrap; i++) {
+        wrap = wrap.parentElement;
+        if (!wrap) break;
+        // 查找选中/激活项
+        const activeOpt = wrap.querySelector('[aria-selected="true"], [class*="active-option"], [class*="selected-item"], [class*="selected-option"], [class*="option-selected"], [class*="checked"], [class*="active-item"]');
+        if (activeOpt) {
+          const text = (activeOpt.textContent || '').trim();
+          if (text && text.length >= 2 && text.length <= 20 && !/_list_\d+/.test(text) && !/请选择|请输入/.test(text)) return text;
         }
-        // 尝试 data-value / data-selected
-        const dataVal = wrap.getAttribute('data-value') || wrap.getAttribute('data-selected') || '';
-        if (dataVal && !/_list_\d+$/.test(dataVal)) return dataVal;
+        // 查找显示值容器（排除 input 和图标）
+        const display = wrap.querySelector('[class*="selection-text"], [class*="selected-text"], [class*="display-value"], [class*="current-value"], [class*="input-text"], [class*="placeholder"]');
+        if (display) {
+          const text = (display.textContent || '').trim();
+          if (text && text.length >= 2 && text.length <= 20 && !/_list_\d+/.test(text) && !/请选择|请输入|请选/.test(text)) return text;
+        }
+      }
+      // 尝试 data 属性
+      const outer = el.closest('[class*="select"], [class*="dropdown"]') || el.parentElement?.parentElement;
+      if (outer) {
+        const dataVal = outer.getAttribute('data-value') || outer.getAttribute('data-selected') || '';
+        if (dataVal && !/_list_\d+$/.test(dataVal) && dataVal.length <= 20) return dataVal;
       }
     }
     // 兜底：返回原始值（可能是内部 ID，但总比空好）
