@@ -1711,10 +1711,37 @@
       if (input.type !== 'radio' && input.type !== 'checkbox' && fieldHasValue(input)) continue;
 
       // 获取当前项目数据
-      const proj = projList[currentProjIdx] || {};
+      let proj = projList[currentProjIdx] || {};
       const smartProj = smartExtractProjectParts(proj);
       const projStart = parseYearMonth(proj.startDate);
       const projEnd = parseYearMonth(proj.endDate);
+
+      // 项目条目自动对齐：根据页面上已有的项目名称，找到 profile 中匹配的项目条目
+      const isProjField = ['projectName', 'projectRole', 'projectStartDate', 'projectEndDate',
+        'projectDescription', 'projectResponsibilities', 'projectAchievements',
+        'techStack', 'projectUrl', 'projectLevel', 'projectType'].includes(fieldType);
+      if (isProjField && projList.length > 1) {
+        const nameField = fields.find(f => matchFieldType(f) === 'projectName' &&
+          !f.closest('#job-autofill-dock, #job-autofill-copy-panel, #job-autofill-ai-panel, #job-autofill-log-panel'));
+        if (nameField) {
+          const pageName = String(readFieldValue(nameField) || '').trim();
+          if (pageName) {
+            const normName = (s) => String(s || '').replace(/\s+/g, '').trim();
+            const pn = normName(pageName);
+            const cn = normName(proj.name);
+            if (cn && pn && !pn.includes(cn) && !cn.includes(pn)) {
+              const matched = projList.find(p => {
+                const pn2 = normName(p.name);
+                return pn2 && (pn.includes(pn2) || pn2.includes(pn));
+              });
+              if (matched && projList.indexOf(matched) !== currentProjIdx) {
+                proj = matched;
+                currentProjIdx = projList.indexOf(matched);
+              }
+            }
+          }
+        }
+      }
 
       // 获取当前工作数据
       let work = workList[currentWorkIdx] || {};
@@ -1752,10 +1779,83 @@
       let edu = eduList[currentEduIdx] || {};
       const eduStart = parseYearMonth(edu.startDate);
       const eduEnd = parseYearMonth(edu.endDate);
-      const family = familyList[currentFamilyIdx] || {};
-      const certificate = certificateList[currentCertificateIdx] || {};
-      const paper = paperList[currentPaperIdx] || paperList[0] || {};
-      const patent = patentList[currentPatentIdx] || patentList[0] || {};
+      let family = familyList[currentFamilyIdx] || {};
+      let certificate = certificateList[currentCertificateIdx] || {};
+      let paper = paperList[currentPaperIdx] || paperList[0] || {};
+      let patent = patentList[currentPatentIdx] || patentList[0] || {};
+
+      // 证书/论文/专利条目自动对齐：根据页面上已有的名称字段匹配
+      const isCertField = ['certificates', 'certificateCode', 'certificateIssuer', 'certificateDate', 'certificateExpiryDate'].includes(fieldType);
+      if (isCertField && certificateList.length > 1) {
+        const certField = fields.find(f => matchFieldType(f) === 'certificates' &&
+          !f.closest('#job-autofill-dock, #job-autofill-copy-panel, #job-autofill-ai-panel, #job-autofill-log-panel'));
+        if (certField) {
+          const pageName = String(readFieldValue(certField) || '').trim();
+          if (pageName) {
+            const normN = (s) => String(s || '').replace(/\s+/g, '').trim();
+            const pn = normN(pageName);
+            const cn = normN(certificate.name);
+            if (cn && pn && !pn.includes(cn) && !cn.includes(pn)) {
+              const matched = certificateList.find(c => {
+                const cn2 = normN(c.name);
+                return cn2 && (pn.includes(cn2) || cn2.includes(pn));
+              });
+              if (matched && certificateList.indexOf(matched) !== currentCertificateIdx) {
+                certificate = matched;
+                currentCertificateIdx = certificateList.indexOf(matched);
+              }
+            }
+          }
+        }
+      }
+
+      const isPaperField = ['paperName', 'paperDate', 'paperPublisher', 'paperAuthorOrder', 'paperRole', 'paperUrl', 'paperAbstract'].includes(fieldType);
+      if (isPaperField && paperList.length > 1) {
+        const paperField = fields.find(f => matchFieldType(f) === 'paperName' &&
+          !f.closest('#job-autofill-dock, #job-autofill-copy-panel, #job-autofill-ai-panel, #job-autofill-log-panel'));
+        if (paperField) {
+          const pageName = String(readFieldValue(paperField) || '').trim();
+          if (pageName) {
+            const normN = (s) => String(s || '').replace(/\s+/g, '').trim();
+            const pn = normN(pageName);
+            const cn = normN(paper.name);
+            if (cn && pn && !pn.includes(cn) && !cn.includes(pn)) {
+              const matched = paperList.find(p => {
+                const pn2 = normN(p.name);
+                return pn2 && (pn.includes(pn2) || pn2.includes(pn));
+              });
+              if (matched && paperList.indexOf(matched) !== currentPaperIdx) {
+                paper = matched;
+                currentPaperIdx = paperList.indexOf(matched);
+              }
+            }
+          }
+        }
+      }
+
+      const isPatentField = ['patentName', 'patentInventor', 'patentDate', 'patentDescription', 'patentUrl'].includes(fieldType);
+      if (isPatentField && patentList.length > 1) {
+        const patentField = fields.find(f => matchFieldType(f) === 'patentName' &&
+          !f.closest('#job-autofill-dock, #job-autofill-copy-panel, #job-autofill-ai-panel, #job-autofill-log-panel'));
+        if (patentField) {
+          const pageName = String(readFieldValue(patentField) || '').trim();
+          if (pageName) {
+            const normN = (s) => String(s || '').replace(/\s+/g, '').trim();
+            const pn = normN(pageName);
+            const cn = normN(patent.name);
+            if (cn && pn && !pn.includes(cn) && !cn.includes(pn)) {
+              const matched = patentList.find(p => {
+                const pn2 = normN(p.name);
+                return pn2 && (pn.includes(pn2) || pn2.includes(pn));
+              });
+              if (matched && patentList.indexOf(matched) !== currentPatentIdx) {
+                patent = matched;
+                currentPatentIdx = patentList.indexOf(matched);
+              }
+            }
+          }
+        }
+      }
 
       // 教育条目自动对齐：根据页面上已选的学历值，找到 profile 中匹配的教育条目。
       // 解决"选了本科但 profile[0] 是高中/硕士"导致填错的问题。
