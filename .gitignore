@@ -1,0 +1,21 @@
+# Personal files - DO NOT COMMIT
+姜淼个人信息/
+投递测试/
+
+# Reference project
+参考项目/
+.agent/
+.agents/
+.claude/
+.grok/
+AGENTS.md
+CLAUDE.md
+node_modules/
+.DS_Store
+Thumbs.db
+*.bak
+*.log
+.idea/
+.vscode/
+*.swp
+*~
