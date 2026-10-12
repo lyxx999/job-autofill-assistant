@@ -1214,22 +1214,23 @@
 
     const features = getElementFeatures(element);
     const hint = hintKey(features.label || features.placeholder);
+    const hintCombined = hintKey(`${features.label || ''} ${features.placeholder || ''}`);
     const section = nearestSectionKind(element);
 
-    if (hint && /起止时间|起止日期|开始结束/.test(hint)) {
+    if ((hint || hintCombined) && /起止时间|起止日期|开始结束/.test(hintCombined)) {
       if (section === 'work') return 'workStartDate';
       if (section === 'project') return 'projectStartDate';
       if (section === 'birth') return 'birthDate';
       if (section === 'certificate') return 'certificateDate';
       if (section !== 'family') return 'eduStartDate';
     }
-    if (hint && /开始时间|开始日期|起始时间|起始日期/.test(hint)) {
+    if ((hint || hintCombined) && /开始时间|开始日期|起始时间|起始日期/.test(hintCombined)) {
       if (section === 'work') return 'workStartDate';
       if (section === 'project') return 'projectStartDate';
       if (section === 'edu') return 'eduStartDate';
       if (section === 'certificate') return 'certificateDate';
     }
-    if (hint && /结束时间|结束日期|截止时间|截止日期/.test(hint)) {
+    if ((hint || hintCombined) && /结束时间|结束日期|截止时间|截止日期/.test(hintCombined)) {
       if (section === 'work') return 'workEndDate';
       if (section === 'project') return 'projectEndDate';
       if (section === 'edu') return 'eduEndDate';
@@ -1245,11 +1246,34 @@
     if (hint && section && SECTION_SHORT_ALIASES[section]) {
       const sectional = matchAliasTable(hint, SECTION_SHORT_ALIASES[section], 80);
       if (sectional) return sectional;
+      if (hintCombined !== hint) {
+        const sectional2 = matchAliasTable(hintCombined, SECTION_SHORT_ALIASES[section], 80);
+        if (sectional2) return sectional2;
+      }
     }
 
     if (hint) {
       const aliased = matchAliasTable(hint, FIELD_ALIASES, 0);
       if (aliased) return aliased;
+    }
+    if (hintCombined && hintCombined !== hint) {
+      const aliased2 = matchAliasTable(hintCombined, FIELD_ALIASES, 0);
+      if (aliased2) return aliased2;
+    }
+
+    // 标签提取失败时的 id/name 关键词兜底
+    const idNameHint = hintKey(`${features.name || ''} ${features.id || ''}`);
+    if (idNameHint) {
+      for (const [fieldType, keys] of Object.entries(FIELD_ALIASES)) {
+        for (const key of keys) {
+          const k = hintKey(key);
+          if (k.length >= 4 && idNameHint.includes(k)) return fieldType;
+        }
+      }
+      for (const [fieldType, patterns] of Object.entries(FIELD_PATTERNS)) {
+        const exact = patterns[0];
+        if (exact && idNameHint && exact.test(idNameHint)) return fieldType;
+      }
     }
 
     const texts = [features.label, features.placeholder, features.name, features.id].filter(Boolean);
