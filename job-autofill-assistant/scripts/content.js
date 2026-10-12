@@ -3252,23 +3252,27 @@
     if (!el) return '';
     if (el.isContentEditable) return (el.textContent || '').trim();
     const val = String(el.value || '').trim();
-    if (val) return val;
-    // 自定义下拉框：input.value 为空但容器内有选中项显示
+    // 过滤内部选项 ID（如 "education_list_2"），只保留有意义的文本值
+    const isInternalId = /_list_\d+$/.test(val) || /^[a-z]+_list_\d+$/.test(val);
+    if (val && !isInternalId) return val;
+    // 自定义下拉框：从容器内读取选中项的显示文本
     if (isSelectWidget(el)) {
-      const wrap = el.closest('.ant-select, .el-select, .rc-select, .semi-select, .arco-select, .phoenix-select, [class*="sd-Select-container-"], [class*="select"]') || el.parentElement;
+      const wrap = el.closest('.ant-select, .el-select, .rc-select, .semi-select, .arco-select, .phoenix-select, [class*="sd-Select-container-"], [class*="select"], [class*="dropdown"]') || el.parentElement;
       if (wrap) {
-        const selected = wrap.querySelector('[class*="selection-item"], [class*="selected"], [class*="value"], [class*="text"], [class*="label"], [class*="tip"]');
-        if (selected) {
-          const text = (selected.textContent || '').trim();
-          if (text && text.length <= 30) return text;
+        // 优先找选中项的显示文本（排除 input 和内部 id 类元素）
+        const candidates = [...wrap.querySelectorAll('[class*="selection-item"], [class*="selected"], [class*="value"], [class*="text"], [class*="label"], [class*="tip"], [class*="item"]')]
+          .filter(n => !n.matches('input, textarea, select, svg, i, .ant-select-arrow, .ant-select-suffix'));
+        for (const node of candidates) {
+          const text = (node.textContent || '').trim();
+          if (text && text.length >= 2 && text.length <= 30 && !/_list_\d+/.test(text)) return text;
         }
-        // 尝试读取容器的 data-value 或 aria 属性
+        // 尝试 data-value / data-selected
         const dataVal = wrap.getAttribute('data-value') || wrap.getAttribute('data-selected') || '';
-        if (dataVal) return dataVal;
-        const aria = el.getAttribute('aria-activedescendant') || el.getAttribute('aria-label') || '';
-        if (aria && aria.length <= 30) return aria;
+        if (dataVal && !/_list_\d+$/.test(dataVal)) return dataVal;
       }
     }
+    // 兜底：返回原始值（可能是内部 ID，但总比空好）
+    if (val) return val;
     return '';
   }
 
