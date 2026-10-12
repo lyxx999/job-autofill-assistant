@@ -4867,6 +4867,10 @@
         <span class="tool-icon">${ICONS.log}</span>
       </button>
 
+      <button type="button" id="job-autofill-btn-diag" class="job-autofill-tool-btn job-autofill-btn-icon" title="复制字段诊断信息（粘贴给开发者排查）">
+        <span class="tool-icon">${ICONS.scan}</span>
+      </button>
+
       <button type="button" id="job-autofill-btn-theme" class="job-autofill-tool-btn job-autofill-btn-icon" title="切换深色/浅色模式">
         <span id="job-autofill-theme-icon" class="tool-icon">${theme === 'light' ? ICONS.sun : ICONS.moon}</span>
       </button>
@@ -5206,6 +5210,72 @@
       aiPanel.style.display = 'none';
       aiBtn.classList.remove('active');
       toggleLogPanel();
+    });
+
+    // 6.5 诊断信息复制
+    const diagBtn = toolbar.querySelector('#job-autofill-btn-diag');
+    diagBtn.addEventListener('click', (e) => {
+      e.stopPropagation();
+      if (dragCtl.wasDragging()) return;
+      const lines = [];
+      lines.push('=== Capybara 网申助手 · 字段诊断 ===');
+      lines.push(`URL: ${location.href}`);
+      lines.push(`时间: ${new Date().toLocaleString()}`);
+      lines.push(`平台检测: Moka=${isMokaForm()}, Beisen=${isBeisenForm()}, XHS=${isXhsForm()}`);
+      lines.push('');
+
+      const allInputs = document.querySelectorAll(
+        'input[type="text"], input[type="email"], input[type="tel"], ' +
+        'input[type="number"], input[type="date"], input[type="month"], input[type="url"], input[type="search"], input[type="radio"], input[type="checkbox"], input:not([type]), ' +
+        'textarea, select, [role="combobox"], [contenteditable="true"]'
+      );
+      lines.push(`原始输入框总数: ${allInputs.length}`);
+
+      const filtered = [...allInputs].filter(el => !isIgnoredInput(el));
+      lines.push(`过滤后(isIgnoredInput): ${filtered.length}`);
+
+      const visible = filtered.filter(el => isElementTrulyVisible(el) ||
+        (isSelectWidget(el) && isElementTrulyVisible(el.closest('.ant-select, .el-select, .rc-select, .semi-select, .arco-select'))));
+      lines.push(`可见输入框: ${visible.length}`);
+      lines.push('');
+      lines.push('--- 每个可见输入框的字段识别 ---');
+
+      visible.forEach((el, i) => {
+        const label = getClosestLabelText(el);
+        const type = matchFieldType(el);
+        const val = el.value || el.textContent?.slice(0, 40) || '';
+        const tag = el.tagName.toLowerCase();
+        const elType = el.type || (el.getAttribute('role') === 'combobox' ? 'combobox' : '-');
+        const isSel = isSelectWidget(el) ? ' [SELECT]' : '';
+        const isYear = isYearControl(el) ? ' [YEAR]' : '';
+        const isMonth = isMonthControl(el) ? ' [MONTH]' : '';
+        const ignored = isIgnoredInput(el) ? ' [IGNORED]' : '';
+        lines.push(`[${i}] <${tag}/${elType}>${isSel}${isYear}${isMonth}${ignored}`);
+        lines.push(`     标签="${label || '(空)'}"`);
+        lines.push(`     匹配=${type || 'null'}`);
+        if (val) lines.push(`     当前值="${val.slice(0, 60)}"`);
+        const features = getElementFeatures(el);
+        if (features.name) lines.push(`     name="${features.name}"`);
+        if (features.id) lines.push(`     id="${features.id}"`);
+        if (features.placeholder) lines.push(`     placeholder="${features.placeholder}"`);
+        const section = nearestSectionKind(el);
+        if (section) lines.push(`     区域=${section}`);
+      });
+
+      const text = lines.join('\n');
+      navigator.clipboard.writeText(text).then(() => {
+        showNotification('✅ 诊断信息已复制到剪贴板，直接粘贴给开发者', 'success');
+      }).catch(() => {
+        // 剪贴板 API 不可用时降级
+        const ta = document.createElement('textarea');
+        ta.value = text;
+        ta.style.cssText = 'position:fixed;top:0;left:0;opacity:0';
+        document.body.appendChild(ta);
+        ta.select();
+        document.execCommand('copy');
+        ta.remove();
+        showNotification('✅ 诊断信息已复制到剪贴板，直接粘贴给开发者', 'success');
+      });
     });
 
     // 7. 深色/浅色模式一键切换
