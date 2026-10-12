@@ -587,8 +587,8 @@
       /有效期至|证书.*有效期|certificate.*expir/i
     ],
     familyName: [
-      /^(family.*name|member.*name|家庭成员姓名|家属姓名)$/i,
-      /家庭成员.*姓名|家属姓名/i
+      /^(family.*name|member.*name|家庭成员姓名|家属姓名|父亲姓名|母亲姓名|配偶姓名|父亲\/母亲姓名|父（母）亲姓名|监护人姓名|家人姓名)$/i,
+      /家庭成员.*姓名|家属姓名|父亲|母亲|配偶|监护人|父母|家人/i
     ],
     familyRelation: [
       /^(family.*relation|member.*relation|亲属关系|家庭成员关系)$/i,
@@ -1038,7 +1038,7 @@
     ['certificateIssuer', ['颁发机构', '发证机构']],
     ['certificateDate', ['取得日期', '获证日期', '发证日期']],
     ['certificateExpiryDate', ['有效期至', '证书有效期']],
-    ['familyName', ['家庭成员姓名', '家属姓名', '亲属姓名', '成员姓名', '父亲姓名', '母亲姓名', '配偶姓名']],
+    ['familyName', ['家庭成员姓名', '家属姓名', '亲属姓名', '成员姓名', '父亲姓名', '母亲姓名', '配偶姓名', '父亲', '母亲', '监护人', '家人', '父母', '父亲/母亲', '父（母）亲']],
     ['familyRelation', ['亲属关系', '家庭成员关系', '与家庭成员关系']],
     ['familyEmployer', ['家庭成员工作单位', '亲属工作单位', '家属工作单位']],
     ['familyPosition', ['家庭成员职务', '亲属职务', '家属职务']],
@@ -1122,8 +1122,8 @@
       ['projectEndDate', ['结束时间', '结束日期', '截止时间']]
     ],
     family: [
-      ['familyName', ['姓名', '名称']],
-      ['familyRelation', ['关系', '与本人关系']],
+      ['familyName', ['姓名', '名称', '父亲', '母亲', '父亲姓名', '母亲姓名', '父亲/母亲', '父（母）亲', '父母', '监护人', '配偶', '家人', '亲属', '成员']],
+      ['familyRelation', ['关系', '与本人关系', '称谓', '与称谓关系']],
       ['familyEmployer', ['工作单位', '单位']],
       ['familyPosition', ['职务', '职位']],
       ['familyPhone', ['联系电话', '电话', '手机']]
@@ -1219,7 +1219,7 @@
       if (section === 'certificate') return 'certificateExpiryDate';
     }
 
-    const familyHint = hint && /家庭成员|家属|亲属|直系|父亲姓名|母亲姓名|配偶姓名|家人姓名|familymember|relativename/.test(hint);
+    const familyHint = hint && /家庭成员|家庭情况|家属|亲属|直系|父亲|母亲|配偶|家人|监护人|父母|familymember|relativename|guardian|parent|spouse/i.test(hint);
     if (hint && (section === 'family' || familyHint) && SECTION_SHORT_ALIASES.family) {
       const familyHit = matchAliasTable(hint, SECTION_SHORT_ALIASES.family, 80);
       if (familyHit) return familyHit;
