@@ -1739,17 +1739,54 @@
       if (isEduField && eduList.length > 1) {
         const degreeField = fields.find(f => matchFieldType(f) === 'degree' &&
           !f.closest('#job-autofill-dock, #job-autofill-copy-panel, #job-autofill-ai-panel, #job-autofill-log-panel'));
+        const norm = (s) => String(s || '').replace(/硕士|博士/g, '研究生').trim();
+        let pageVal = '';
         if (degreeField) {
-          const pageVal = String(readFieldValue(degreeField) || '').trim();
-          if (pageVal) {
-            const norm = (s) => String(s).replace(/硕士|博士/g, '研究生').trim();
-            const pageNorm = norm(pageVal);
-            // 当前索引的条目不匹配时，搜索其他条目
-            if (norm(edu.degree) !== pageNorm) {
-              const matched = eduList.find(e => norm(e.degree) === pageNorm);
-              if (matched) {
-                edu = matched;
-                currentEduIdx = eduList.indexOf(matched);
+          pageVal = String(readFieldValue(degreeField) || '').trim();
+          // 如果 readFieldValue 返回的是内部 ID（如 education_list_2），尝试从选项列表推断
+          if (/_[a-z]*list_\d+$/i.test(pageVal) || !pageVal) {
+            const wrap = degreeField.closest('[class*="select"], [class*="dropdown"]') || degreeField.parentElement?.parentElement;
+            if (wrap) {
+              // 查找选中/激活的选项的显示文本
+              const activeOpt = wrap.querySelector('[aria-selected="true"], [class*="active"], [class*="selected"], [class*="checked"]');
+              if (activeOpt) {
+                const optText = (activeOpt.textContent || '').trim();
+                if (optText && optText.length <= 10 && !/_list_\d+/.test(optText)) pageVal = optText;
+              }
+            }
+            // 还是读不到，尝试从 input.value 的索引推断（_2 通常是第 3 个选项）
+            if (!pageVal || /_[a-z]*list_\d+$/i.test(pageVal)) {
+              const idxMatch = pageVal.match(/_(\d+)$/);
+              if (idxMatch) {
+                const idx = parseInt(idxMatch[1], 10);
+                const commonDegrees = ['高中', '中专', '大专', '本科', '硕士', '博士'];
+                if (idx < commonDegrees.length) pageVal = commonDegrees[idx];
+              }
+            }
+          }
+        }
+        if (pageVal) {
+          const pageNorm = norm(pageVal);
+          // 当前索引的条目不匹配时，搜索其他条目
+          if (norm(edu.degree) !== pageNorm) {
+            const matched = eduList.find(e => norm(e.degree) === pageNorm);
+            if (matched) {
+              edu = matched;
+              currentEduIdx = eduList.indexOf(matched);
+            }
+          }
+        } else {
+          // 学历值完全读不到时，反向推断：
+          // 如果页面上已有学校名称值，找到 eduList 中不包含该学校的条目
+          const schoolInput = fields.find(f => matchFieldType(f) === 'school' &&
+            !f.closest('#job-autofill-dock, #job-autofill-copy-panel, #job-autofill-ai-panel, #job-autofill-log-panel'));
+          if (schoolInput) {
+            const pageSchool = String(readFieldValue(schoolInput) || '').trim();
+            if (pageSchool) {
+              const notMatching = eduList.find(e => !pageSchool.includes(e.school || '') && (e.school || '').length > 0);
+              if (notMatching && eduList.indexOf(notMatching) !== currentEduIdx) {
+                edu = notMatching;
+                currentEduIdx = eduList.indexOf(notMatching);
               }
             }
           }
@@ -1763,7 +1800,7 @@
             !f.closest('#job-autofill-dock, #job-autofill-copy-panel, #job-autofill-ai-panel, #job-autofill-log-panel'));
           if (!degreeField) return false;
           const pageVal = readFieldValue(degreeField);
-          if (!pageVal) return false;
+          if (!pageVal || /_[a-z]*list_\d+$/i.test(pageVal)) return false; // 读不到就不检测
           const norm = (s) => String(s).replace(/硕士|博士/g, '研究生').trim();
           return norm(pageVal) !== norm(edu.degree);
         })();
