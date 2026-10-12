@@ -1717,10 +1717,36 @@
       const projEnd = parseYearMonth(proj.endDate);
 
       // 获取当前工作数据
-      const work = workList[currentWorkIdx] || {};
+      let work = workList[currentWorkIdx] || {};
       const smartWork = smartExtractWorkParts(work);
       const workStart = parseYearMonth(work.startDate);
       const workEnd = parseYearMonth(work.endDate);
+
+      // 工作条目自动对齐：根据页面上已有的单位名称，找到 profile 中匹配的工作条目
+      const isWorkField = ['company', 'position', 'department', 'workType', 'workCity',
+        'workStartDate', 'workEndDate', 'workDescription', 'workAchieves', 'workType'].includes(fieldType);
+      if (isWorkField && workList.length > 1) {
+        const companyField = fields.find(f => matchFieldType(f) === 'company' &&
+          !f.closest('#job-autofill-dock, #job-autofill-copy-panel, #job-autofill-ai-panel, #job-autofill-log-panel'));
+        if (companyField) {
+          const pageCompany = String(readFieldValue(companyField) || '').trim();
+          if (pageCompany) {
+            const normCo = (s) => String(s || '').replace(/\s+/g, '').trim();
+            const pageCo = normCo(pageCompany);
+            const currentCo = normCo(work.company);
+            if (currentCo && pageCo && !pageCo.includes(currentCo) && !currentCo.includes(pageCo)) {
+              const matched = workList.find(w => {
+                const wc = normCo(w.company);
+                return wc && (pageCo.includes(wc) || wc.includes(pageCo));
+              });
+              if (matched && workList.indexOf(matched) !== currentWorkIdx) {
+                work = matched;
+                currentWorkIdx = workList.indexOf(matched);
+              }
+            }
+          }
+        }
+      }
 
       // 获取当前教育数据
       let edu = eduList[currentEduIdx] || {};
