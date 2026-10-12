@@ -119,7 +119,9 @@ class StorageManager {
           gpa: '',             // GPA成绩 (如: 3.8/4.0)
           rank: '',            // 专业排名 (如: 前5%, 1/120)
           courses: '',         // 主修核心课程
-          description: ''
+          description: '',
+          degreeCertNo: '',    // 学位证书编号
+          diplomaCertNo: ''    // 学历证书编号
         }
       ],
 

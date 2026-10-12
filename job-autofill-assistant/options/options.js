@@ -1065,6 +1065,14 @@ function renderEducationList(educationList) {
           <label>毕业时间</label>
           <input type="text" class="edu-end" value="${attr(edu.endDate)}" placeholder="例如: 2026-06 或 至今">
         </div>
+        <div class="form-group">
+          <label>学位证书编号</label>
+          <input type="text" class="edu-degree-cert-no" value="${attr(edu.degreeCertNo)}" placeholder="例如: 100012022000001">
+        </div>
+        <div class="form-group">
+          <label>学历证书编号</label>
+          <input type="text" class="edu-diploma-cert-no" value="${attr(edu.diplomaCertNo)}" placeholder="例如: 100012022000001">
+        </div>
       </div>
       <div class="form-group">
         <label>主修核心课程</label>
@@ -1664,7 +1672,9 @@ function collectEducationData() {
       startDate: card.querySelector('.edu-start')?.value.trim() || '',
       endDate: card.querySelector('.edu-end')?.value.trim() || '',
       courses: card.querySelector('.edu-courses')?.value.trim() || '',
-      description: card.querySelector('.edu-description')?.value.trim() || ''
+      description: card.querySelector('.edu-description')?.value.trim() || '',
+      degreeCertNo: card.querySelector('.edu-degree-cert-no')?.value.trim() || '',
+      diplomaCertNo: card.querySelector('.edu-diploma-cert-no')?.value.trim() || ''
     });
   });
   return education;

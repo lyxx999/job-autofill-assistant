@@ -577,6 +577,14 @@
       /^(certificate.*(?:code|number|no)|证书编号|资格证编号|职业资格证编号)$/i,
       /资格证.*编号|职业资格证|certificate.*(?:code|number)/i
     ],
+    degreeCertNo: [
+      /^(degree.*cert.*(?:no|number|code)|学位证书编号|学位证编号)$/i,
+      /学位证书编号|学位证编号|degree.*cert.*(?:no|number|code)/i
+    ],
+    diplomaCertNo: [
+      /^(diploma.*cert.*(?:no|number|code)|学历证书编号|毕业证编号|学历证编号|学信网编号)$/i,
+      /学历证书编号|毕业证编号|学历证编号|diploma.*cert.*(?:no|number|code)/i
+    ],
     certificateIssuer: [
       /^(certificate.*issuer|issuing.*organization|颁发机构|发证机构)$/i,
       /颁发机构|发证机构|certificate.*issuer/i
@@ -1038,6 +1046,8 @@
     ['awards', ['获奖经历', '竞赛获奖', '荣誉奖项', '奖项', '荣誉']],
     ['certificates', ['资格证书', '职业证书', '证书名称', '所获证书']],
     ['certificateCode', ['证书编号', '资格证编号']],
+    ['degreeCertNo', ['学位证书编号', '学位证编号']],
+    ['diplomaCertNo', ['学历证书编号', '毕业证编号', '学历证编号', '学信网编号']],
     ['certificateIssuer', ['颁发机构', '发证机构']],
     ['certificateDate', ['取得日期', '获证日期', '发证日期']],
     ['certificateExpiryDate', ['有效期至', '证书有效期']],
@@ -1109,7 +1119,9 @@
       ['college', ['学院', '院系']],
       ['eduStartDate', ['开始时间', '开始日期', '起始时间', '入学']],
       ['eduEndDate', ['结束时间', '结束日期', '截止时间', '毕业']],
-      ['educationDescription', ['在校经历', '在校描述', '学习经历', '在校表现', '经历描述']]
+      ['educationDescription', ['在校经历', '在校描述', '学习经历', '在校表现', '经历描述']],
+      ['degreeCertNo', ['学位证书编号', '学位证编号']],
+      ['diplomaCertNo', ['学历证书编号', '毕业证编号', '学历证编号']]
     ],
     work: [
       ['company', ['公司', '单位', '企业', '名称']],
@@ -1943,6 +1955,8 @@
           break;
         case 'academicDegree': valueToFill = edu.academicDegree; break;
         case 'secondMajor': valueToFill = edu.secondMajor; break;
+        case 'degreeCertNo': valueToFill = edu.degreeCertNo; break;
+        case 'diplomaCertNo': valueToFill = edu.diplomaCertNo; break;
         case 'sourcePlace': valueToFill = profile.basicInfo?.sourcePlace; break;
         case 'registeredAddress': valueToFill = profile.basicInfo?.registeredAddress; break;
         case 'degree':
@@ -2844,7 +2858,9 @@
       '学校所在城市':'schoolCity', '导师':'advisor', '实验室':'laboratory',
       '研究方向':'researchArea', '是否全日制':'fullTime', '全日制':'fullTime',
       '是否最高全日制学历':'highestFullTime', '最高全日制学历':'highestFullTime',
-      '主修状态':'majorStatus', '是否主修':'majorStatus'
+      '主修状态':'majorStatus', '是否主修':'majorStatus',
+      '学位证书编号':'degreeCertNo', '学位证编号':'degreeCertNo',
+      '学历证书编号':'diplomaCertNo', '毕业证编号':'diplomaCertNo', '学历证编号':'diplomaCertNo'
     },
     projects: {
       '项目级别':'projectLevel', '项目类型':'projectType'
