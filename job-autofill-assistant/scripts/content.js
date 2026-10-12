@@ -1051,6 +1051,7 @@
     ['major', ['所学专业', '专业名称', '专业', 'major']],
     ['degree', ['最高学历', '学历层次', '学历']],
     ['academicDegree', ['学位', 'academicdegree']],
+    ['educationDescription', ['在校经历', '在校描述', '教育经历描述', '在校表现', '学习经历描述']],
     ['secondMajor', ['第二专业', '辅修专业']],
     ['degreeType', ['培养方式', '学习形式', '学历类型']],
     ['schoolType', ['院校层次', '学校层次', '院校类别', '学校类型']],
@@ -1107,7 +1108,8 @@
       ['secondMajor', ['第二专业', '辅修专业']],
       ['college', ['学院', '院系']],
       ['eduStartDate', ['开始时间', '开始日期', '起始时间', '入学']],
-      ['eduEndDate', ['结束时间', '结束日期', '截止时间', '毕业']]
+      ['eduEndDate', ['结束时间', '结束日期', '截止时间', '毕业']],
+      ['educationDescription', ['在校经历', '在校描述', '学习经历', '在校表现', '经历描述']]
     ],
     work: [
       ['company', ['公司', '单位', '企业', '名称']],
@@ -1692,6 +1694,24 @@
       const certificate = certificateList[currentCertificateIdx] || {};
       const paper = paperList[currentPaperIdx] || paperList[0] || {};
       const patent = patentList[currentPatentIdx] || patentList[0] || {};
+
+      // 教育索引错位检测：页面上已有的学历值与 profile 当前教育条目不匹配时，
+      // 说明用户手动选择了不同学历（如选了"本科"但 profile[0] 是"硕士"），
+      // 此时跳过教育相关字段的自动填充，避免填入错误数据。
+      const eduMismatch = (fieldType === 'school' || fieldType === 'major' || fieldType === 'educationDescription') &&
+        edu.degree && (() => {
+          const degreeField = fields.find(f => matchFieldType(f) === 'degree' &&
+            !f.closest('#job-autofill-dock, #job-autofill-copy-panel, #job-autofill-ai-panel, #job-autofill-log-panel'));
+          if (!degreeField) return false;
+          const pageVal = readFieldValue(degreeField);
+          if (!pageVal) return false;
+          const norm = (s) => String(s).replace(/硕士|博士|本科|大专|专科/g, (m) => ({ '硕士': '研究生', '博士': '研究生' }[m] || m)).trim();
+          return norm(pageVal) !== norm(edu.degree);
+        })();
+      if (eduMismatch) {
+        markManual(input, `${getClosestLabelText(input) || '教育字段'}：学历选择与资料不符，请手动填写`);
+        continue;
+      }
 
       let valueToFill = null;
       const isSelect = input.tagName.toLowerCase() === 'select';
