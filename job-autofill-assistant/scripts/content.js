@@ -3251,7 +3251,25 @@
   function readFieldValue(el) {
     if (!el) return '';
     if (el.isContentEditable) return (el.textContent || '').trim();
-    return String(el.value || '').trim();
+    const val = String(el.value || '').trim();
+    if (val) return val;
+    // 自定义下拉框：input.value 为空但容器内有选中项显示
+    if (isSelectWidget(el)) {
+      const wrap = el.closest('.ant-select, .el-select, .rc-select, .semi-select, .arco-select, .phoenix-select, [class*="sd-Select-container-"], [class*="select"]') || el.parentElement;
+      if (wrap) {
+        const selected = wrap.querySelector('[class*="selection-item"], [class*="selected"], [class*="value"], [class*="text"], [class*="label"], [class*="tip"]');
+        if (selected) {
+          const text = (selected.textContent || '').trim();
+          if (text && text.length <= 30) return text;
+        }
+        // 尝试读取容器的 data-value 或 aria 属性
+        const dataVal = wrap.getAttribute('data-value') || wrap.getAttribute('data-selected') || '';
+        if (dataVal) return dataVal;
+        const aria = el.getAttribute('aria-activedescendant') || el.getAttribute('aria-label') || '';
+        if (aria && aria.length <= 30) return aria;
+      }
+    }
+    return '';
   }
 
   function normalizeIdentity(value) {
@@ -5290,7 +5308,7 @@
       visible.forEach((el, i) => {
         const label = getClosestLabelText(el);
         const type = matchFieldType(el);
-        const val = el.value || el.textContent?.slice(0, 40) || '';
+        const val = readFieldValue(el) || '';
         const tag = el.tagName.toLowerCase();
         const elType = el.type || (el.getAttribute('role') === 'combobox' ? 'combobox' : '-');
         const isSel = isSelectWidget(el) ? ' [SELECT]' : '';
