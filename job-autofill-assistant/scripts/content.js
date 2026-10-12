@@ -1237,10 +1237,20 @@
       if (section === 'certificate') return 'certificateExpiryDate';
     }
 
-    const familyHint = hint && /家庭成员|家庭情况|家属|亲属|直系|父亲|母亲|配偶|家人|监护人|父母|familymember|relativename|guardian|parent|spouse/i.test(hint);
+    const familyHint = hint && /家庭成员|家庭情况|家属|亲属|直系|父亲|母亲|配偶|家人|监护人|父母|工作单位\/就读|就读院校\/工作|familymember|relativename|guardian|parent|spouse/i.test(hint);
     if (hint && (section === 'family' || familyHint) && SECTION_SHORT_ALIASES.family) {
       const familyHit = matchAliasTable(hint, SECTION_SHORT_ALIASES.family, 80);
       if (familyHit) return familyHit;
+    }
+    // 复合标签兜底：标签同时包含家庭关键词和教育/工作关键词时，优先走 family 分支
+    // 例如"工作单位/就读院校"同时匹配 familyEmployer 和 school，应优先 familyEmployer
+    if (section !== 'family' && !familyHint && SECTION_SHORT_ALIASES.family) {
+      const familyComposite = /工作单位|就读院校|政治面貌|出生日期/.test(hint) &&
+        /(单位|院校|政治|出生)/.test(hint) && section !== 'edu' && section !== 'work';
+      if (familyComposite) {
+        const familyHit = matchAliasTable(hint, SECTION_SHORT_ALIASES.family, 80);
+        if (familyHit) return familyHit;
+      }
     }
 
     if (hint && section && SECTION_SHORT_ALIASES[section]) {
